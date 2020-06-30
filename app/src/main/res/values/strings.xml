@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Bar Finder</string>
+    <string name="license" translatable="false" formatted="true">Copyright (c) 2020 Kokila Ekanayake\nAll Rights Reserved\n\nUnauthorized copying of the source code or editing, via any medium is strictly prohibited.\n\nProprietary and confidential\n\nWritten by Kokila Ekanayake, June 2020</string>
+    <string name="email" translatable="false">kokilaprabuddha@gmail.com</string>
+    <string name="feedback">Your feedback is important to us in order to make TakeIt better for you. Report any bugs, improvements and suggestions to make this app better.</string>
 </resources>

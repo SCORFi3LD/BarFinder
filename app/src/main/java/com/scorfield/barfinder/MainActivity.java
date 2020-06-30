@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (id == R.id.nav_settings) {
             startActivity(new Intent(MainActivity.this, SettingsActivity.class));
         } else if (id == R.id.nav_about) {
-            //startActivity(new Intent(MainActivity.this, AboutActivity.class));
+            startActivity(new Intent(MainActivity.this, AboutActivity.class));
         }
         drawer.closeDrawer(GravityCompat.START);
         return true;

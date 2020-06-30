@@ -1,53 +1,63 @@
 package com.scorfield.barfinder;
 
-import androidx.annotation.NonNull;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
+
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import android.annotation.SuppressLint;
-import android.content.IntentSender;
-import android.location.Location;
-import android.os.Bundle;
-import android.widget.Toast;
-
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.scorfield.barfinder.mapsdirection.FetchURL;
+import com.scorfield.barfinder.mapsdirection.TaskLoadedCallback;
+import com.scorfield.barfinder.utils.AnimUtils;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TaskLoadedCallback, View.OnClickListener {
 
     private GoogleMap mMap;
-    private FusedLocationProviderClient mFusedLocationProviderClient;
-    private Location mLastKnownLocation;
-    private LocationCallback locationCallback;
-    private final float DEFAULT_ZOOM = 16;
+    private Polyline currentPolyline;
+    LatLng myLatLng, storeLatLng;
+
+    AnimUtils animUtils;
+    CardView cardView;
+    ImageButton btnExpand, btnBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        animUtils = new AnimUtils();
+
+        cardView = findViewById(R.id.card_view);
+        btnBack = findViewById(R.id.btn_map_back);
+        btnExpand = findViewById(R.id.btn_expand);
+
+        btnBack.setOnClickListener(this);
+        btnExpand.setOnClickListener(this);
+
+        Intent in = getIntent();
+        myLatLng = (LatLng) in.getExtras().get("me");
+        storeLatLng = (LatLng) in.getExtras().get("store");
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MapsActivity.this);
-
     }
 
 
@@ -59,74 +69,92 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.getUiSettings().setRotateGesturesEnabled(false);
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.maps_theme));
 
-        //check if gps enabled
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        MarkerOptions options = new MarkerOptions()
+                .position(myLatLng)
+                .title("Your Location")
+                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_me));
+        mMap.addMarker(options);
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(locationRequest);
+        MarkerOptions store = new MarkerOptions()
+                .position(storeLatLng)
+                .title("Liquor Store")
+                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_store));
+        mMap.addMarker(store);
 
-        SettingsClient settingsClient = LocationServices.getSettingsClient(MapsActivity.this);
-        Task<LocationSettingsResponse> task = settingsClient.checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
-            @Override
-            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                getDeviceLocation();
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                if (e instanceof ResolvableApiException) {
-                    ResolvableApiException resolvable = (ResolvableApiException) e;
-                    try {
-                        resolvable.startResolutionForResult(MapsActivity.this, 51);
-                    } catch (IntentSender.SendIntentException e1) {
-                        e1.printStackTrace();
-                    }
-                }
-            }
-        });
+        String url = getDirectionsUrl(myLatLng, storeLatLng, "driving");
+        new FetchURL(MapsActivity.this).execute(url, "walking");
     }
 
-    @SuppressLint("MissingPermission")
-    private void getDeviceLocation() {
-        mFusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                if (task.isSuccessful()) {
-                    mLastKnownLocation = task.getResult();
-                    if (mLastKnownLocation != null) {
-                        CameraUpdate location = CameraUpdateFactory.newLatLngZoom(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), DEFAULT_ZOOM);
-                        mMap.animateCamera(location, 1000, null);
-                    } else {
-                        final LocationRequest locationRequest = LocationRequest.create();
-                        locationRequest.setInterval(10000);
-                        locationRequest.setFastestInterval(5000);
-                        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                        locationCallback = new LocationCallback() {
-                            @Override
-                            public void onLocationResult(LocationResult locationResult) {
-                                super.onLocationResult(locationResult);
-                                if (locationResult == null) {
-                                    return;
-                                }
-                                mLastKnownLocation = locationResult.getLastLocation();
-                                CameraUpdate location = CameraUpdateFactory.newLatLngZoom(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), DEFAULT_ZOOM);
-                                mMap.animateCamera(location, 1000, null);
-                                mFusedLocationProviderClient.removeLocationUpdates(locationCallback);
-                            }
-                        };
-                        mFusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-                    }
-                } else {
-                    Toast.makeText(MapsActivity.this, "Unable to get location", Toast.LENGTH_SHORT).show();
-                }
+    private String getDirectionsUrl(LatLng origin, LatLng dest, String directionMode) {
+        // Origin of route
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+        // Destination of route
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        // Mode
+        String mode = "mode=" + directionMode;
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + mode;
+        // Output format
+        String output = "json";
+        // Building the url to the web service
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
+        return url;
+    }
+
+    public static void zoomToPolyline(GoogleMap map, Polyline p) {
+        if (p == null || p.getPoints().isEmpty())
+            return;
+
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+
+        for (LatLng latLng : p.getPoints()) {
+            builder.include(latLng);
+        }
+        final LatLngBounds bounds = builder.build();
+        try {
+            map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 250));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onTaskDone(Object... values) {
+        if (currentPolyline != null) {
+            currentPolyline.remove();
+        }
+        currentPolyline = mMap.addPolyline((PolylineOptions) values[0]);
+        zoomToPolyline(mMap, currentPolyline);
+    }
+
+    private BitmapDescriptor generateBitmapDescriptorFromRes(Context context, int resId) {
+        Drawable drawable = ContextCompat.getDrawable(context, resId);
+        drawable.setBounds(
+                0,
+                0,
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight());
+        Bitmap bitmap = Bitmap.createBitmap(
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == btnBack) {
+            finish();
+        } else if (v == btnExpand) {
+            if (animUtils.getState() == 0) {
+                btnExpand.setImageResource(R.drawable.ic_arrow_down);
+                animUtils.expand(cardView);
+            } else {
+                btnExpand.setImageResource(R.drawable.ic_arrow_up);
+                animUtils.collapse(cardView);
             }
-        });
+        }
     }
 }

@@ -28,9 +28,9 @@
         android:id="@+id/card_view"
         android:layout_width="match_parent"
         android:layout_height="160dp"
+        android:layout_alignParentBottom="true"
         android:layout_gravity="center"
         android:layout_margin="6dp"
-        android:layout_alignParentBottom="true"
         app:cardCornerRadius="4dp">
 
         <LinearLayout
@@ -102,26 +102,21 @@
                                 android:layout_height="match_parent"
                                 android:layout_weight="1">
 
-                                <LinearLayout
+
+                                <ImageButton
+                                    android:id="@+id/btn_map_call"
                                     android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@drawable/ic_call" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_centerInParent="true"
-                                    android:orientation="vertical">
-
-                                    <ImageButton
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:background="?attr/selectableItemBackgroundBorderless"
-                                        android:src="@drawable/ic_call" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:text="CALL"
-                                        android:textColor="@color/colorAccent" />
-                                </LinearLayout>
+                                    android:text="CALL"
+                                    android:textColor="@color/colorAccent"
+                                    android:translationY="20dp" />
                             </RelativeLayout>
 
                             <RelativeLayout
@@ -129,26 +124,20 @@
                                 android:layout_height="match_parent"
                                 android:layout_weight="1">
 
-                                <LinearLayout
+                                <ImageButton
+                                    android:id="@+id/btn_map_web"
                                     android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@drawable/ic_website" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_centerInParent="true"
-                                    android:orientation="vertical">
-
-                                    <ImageButton
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:background="?attr/selectableItemBackgroundBorderless"
-                                        android:src="@drawable/ic_website" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:text="WEBSITE"
-                                        android:textColor="@color/colorAccent" />
-                                </LinearLayout>
+                                    android:text="WEBSITE"
+                                    android:textColor="@color/colorAccent"
+                                    android:translationY="20dp"/>
                             </RelativeLayout>
 
                             <RelativeLayout
@@ -156,26 +145,20 @@
                                 android:layout_height="match_parent"
                                 android:layout_weight="1">
 
-                                <LinearLayout
+                                <ImageButton
+                                    android:id="@+id/btn_map_nan"
                                     android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@drawable/ic_call" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_centerInParent="true"
-                                    android:orientation="vertical">
-
-                                    <ImageButton
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:background="?attr/selectableItemBackgroundBorderless"
-                                        android:src="@drawable/ic_call" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="center_horizontal"
-                                        android:text="CALL"
-                                        android:textColor="@color/colorAccent" />
-                                </LinearLayout>
+                                    android:text="NAN"
+                                    android:textColor="@color/colorAccent"
+                                    android:translationY="20dp" />
                             </RelativeLayout>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
@@ -200,9 +183,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="15dp"
                             android:layout_weight="1"
+                            android:fontFamily="@font/roboto_light_font"
                             android:text="Address Here"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/roboto_light_font"/>
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -225,11 +208,11 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="15dp"
                             android:layout_weight="1"
+                            android:fontFamily="@font/roboto_light_font"
                             android:text="Closed"
                             android:textColor="@color/colorRed"
-                            android:textStyle="bold"
                             android:textSize="14sp"
-                            android:fontFamily="@font/roboto_light_font"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -252,9 +235,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="15dp"
                             android:layout_weight="1"
-                            android:text="3.5"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/roboto_light_font"/>
+                            android:fontFamily="@font/roboto_light_font"
+                            android:text="0"
+                            android:textSize="14sp" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.core.widget.NestedScrollView>

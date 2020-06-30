@@ -38,7 +38,8 @@ public class PermissionActivity extends AppCompatActivity {
         nextIntent = new Intent(PermissionActivity.this, MainActivity.class);
 
         if (ContextCompat.checkSelfPermission(PermissionActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &
-                ContextCompat.checkSelfPermission(PermissionActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(PermissionActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &
+                ContextCompat.checkSelfPermission(PermissionActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
         ) {
             startActivity(new Intent(nextIntent));
             finish();
@@ -52,7 +53,8 @@ public class PermissionActivity extends AppCompatActivity {
                 Dexter.withActivity(PermissionActivity.this)
                         .withPermissions(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.CALL_PHONE
                         )
                         .withListener(new MultiplePermissionsListener() {
                             @Override

@@ -13,4 +13,8 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="MyActionBarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@color/colorWhite</item>
+    </style>
+
 </resources>

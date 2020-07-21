@@ -11,9 +11,9 @@ public class BarBean {
     private LatLng storeLatLng;
     private String placeId;
     private double distance;
+    private String distanceString;
 
-
-    public BarBean(String shop, String address, float rating, boolean open, LatLng myLatLng, LatLng storeLatLng, String placeId, double distance) {
+    public BarBean(String shop, String address, float rating, boolean open, LatLng myLatLng, LatLng storeLatLng, String placeId) {
         this.shop = shop;
         this.address = address;
         this.rating = rating;
@@ -21,6 +21,17 @@ public class BarBean {
         this.myLatLng = myLatLng;
         this.storeLatLng = storeLatLng;
         this.placeId = placeId;
+    }
+
+    public void setDistanceString(String distanceString) {
+        this.distanceString = distanceString;
+    }
+
+    public String getDistanceString() {
+        return distanceString;
+    }
+
+    public void setDistance(double distance) {
         this.distance = distance;
     }
 

@@ -6,10 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
 
@@ -46,7 +49,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, NavigationView.OnNavigationItemSelectedListener{
+    private static final String TAG = "MainActivity";
 
     private static final String BAR_SHARED_PREFS = "BarCache";
     private static final String BAR_SEARCH_RANGE = "SearchRange";
@@ -66,10 +70,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     FrameLayout adContainerView;
     AdView mAdView;
 
+    BarAdapter barAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         sharedPreferences = getSharedPreferences(BAR_SHARED_PREFS, MODE_PRIVATE);
 
@@ -106,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             public void onReceive(Context context, Intent intent) {
                 double lat = intent.getExtras().getDouble("lat");
                 double lng = intent.getExtras().getDouble("lng");
-                myLatLng = new LatLng(lat, lng);
+               myLatLng = new LatLng(lat, lng);
             }
         };
 
@@ -131,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
-                Log.e("AdMob", "Ad Init Completed");
+                Log.e(TAG, "Ad Init Completed");
             }
         });
 
@@ -155,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             String parameters = location + "&" + radius + "&" + keyword;
             String output = "json";
             String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
+            RequestQueue mainRequestQueue = Volley.newRequestQueue(MainActivity.this);
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url.replace(" ", "%20"), null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
@@ -175,16 +183,17 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                             }
                             JSONObject location = (JSONObject) ((JSONObject) bar.get("geometry")).get("location");
                             LatLng latLng = new LatLng(location.getDouble("lat"), location.getDouble("lng"));
-                            double distance = distance(myLatLng.latitude, myLatLng.longitude, latLng.latitude, latLng.longitude);
                             String placeId = bar.getString("place_id");
-                            BarBean barBean = new BarBean(shop, address, rating, open, myLatLng, latLng, placeId, distance);
+                            setDistance(myLatLng, latLng, i);
+                            BarBean barBean = new BarBean(shop, address, rating, open, myLatLng, latLng, placeId);
                             barBeans.add(barBean);
                         }
 
-                        BarAdapter barAdapter = new BarAdapter(barBeans);
+                        barAdapter = new BarAdapter(barBeans);
                         recyclerView.setHasFixedSize(true);
                         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
                         recyclerView.setAdapter(barAdapter);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -203,31 +212,44 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
             );
-
-            RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
-            requestQueue.add(jsonObjectRequest);
+            mainRequestQueue.add(jsonObjectRequest);
         }
     }
 
-    private double distance(double lat1, double lon1, double lat2, double lon2) {
-        double theta = lon1 - lon2;
-        double dist = Math.sin(deg2rad(lat1))
-                * Math.sin(deg2rad(lat2))
-                + Math.cos(deg2rad(lat1))
-                * Math.cos(deg2rad(lat2))
-                * Math.cos(deg2rad(theta));
-        dist = Math.acos(dist);
-        dist = rad2deg(dist);
-        dist = dist * 60 * 1.1515;
-        return (dist);
-    }
+    private void setDistance(LatLng latLng1, LatLng latLng2, final int index) {
+        String origins = latLng1.latitude + "," + latLng1.longitude;
+        String destination = latLng2.latitude + "," + latLng2.longitude;
+        String params = "?origins=" + origins + "&destinations=" + destination + "&key=" + getString(R.string.google_maps_key);
+        String url = "https://maps.googleapis.com/maps/api/distancematrix/json" + params;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url.replace(" ", "%20"), null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    String distance = response.getJSONArray("rows").getJSONObject(0).getJSONArray("elements").getJSONObject(0).getJSONObject("distance").getString("text");
+                    BarBean barBean = barBeans.get(index);
+                    barBean.setDistance(Double.parseDouble(distance.split(" ")[0]));
+                    barBean.setDistanceString(distance);
+                    barBeans.set(index, barBean);
+                    barAdapter.notifyItemChanged(index);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
 
-    private double deg2rad(double deg) {
-        return (deg * Math.PI / 180.0);
-    }
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        );
 
-    private double rad2deg(double rad) {
-        return (rad * 180.0 / Math.PI);
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        requestQueue.add(jsonObjectRequest);
     }
 
     /**
@@ -323,10 +345,45 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            drawer.openDrawer(GravityCompat.START);
+        int size = barBeans.size();
+        BarBean temp = null;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                drawer.openDrawer(GravityCompat.START);
+                break;
+            case R.id.menuAsc:
+                for (int i = 0; i < size; i++) {
+                    for (int j = 1; j < (size - i); j++) {
+                        if (barBeans.get(j - 1).getDistance() > barBeans.get(j).getDistance()) {
+                            temp = barBeans.get(j - 1);
+                            barBeans.set(j - 1, barBeans.get(j));
+                            barBeans.set(j, temp);
+                        }
+                    }
+                }
+                barAdapter.notifyDataSetChanged();
+                break;
+            case R.id.menuDesc:
+                for (int i = 0; i < size; i++) {
+                    for (int j = 1; j < (size - i); j++) {
+                        if (barBeans.get(j - 1).getDistance() < barBeans.get(j).getDistance()) {
+                            temp = barBeans.get(j - 1);
+                            barBeans.set(j - 1, barBeans.get(j));
+                            barBeans.set(j, temp);
+                        }
+                    }
+                }
+                barAdapter.notifyDataSetChanged();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.sort_menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     private void loadBanner() {

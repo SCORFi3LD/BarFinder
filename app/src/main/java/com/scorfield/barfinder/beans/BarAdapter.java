@@ -15,13 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.scorfield.barfinder.MapsActivity;
 import com.scorfield.barfinder.R;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class BarAdapter extends RecyclerView.Adapter<BarAdapter.ViewHolder> {
 
     private ArrayList<BarBean> barBeans;
-    DecimalFormat df = new DecimalFormat("0.0");
 
     public BarAdapter(ArrayList<BarBean> barBeans) {
         this.barBeans = barBeans;
@@ -40,7 +38,7 @@ public class BarAdapter extends RecyclerView.Adapter<BarAdapter.ViewHolder> {
         final BarBean barBean = barBeans.get(position);
         holder.txt_shop.setText(barBean.getShop());
         holder.txt_address.setText(barBean.getAddress());
-        holder.txt_distance.setText(df.format(barBean.getDistance()) + "km");
+        holder.txt_distance.setText(barBean.getDistanceString());
         holder.ratingBar.setRating(barBean.getRating());
         if (barBean.isOpen()) {
             holder.open.setImageResource(R.drawable.ic_open_now);
@@ -53,7 +51,7 @@ public class BarAdapter extends RecyclerView.Adapter<BarAdapter.ViewHolder> {
                 Intent in = new Intent(view.getContext(), MapsActivity.class);
                 in.putExtra("me", barBean.getMyLatLng());
                 in.putExtra("store", barBean.getStoreLatLng());
-                in.putExtra("placeId",barBean.getPlaceId());
+                in.putExtra("placeId", barBean.getPlaceId());
                 view.getContext().startActivity(in);
             }
         });

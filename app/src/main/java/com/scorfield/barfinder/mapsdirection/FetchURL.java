@@ -18,8 +18,8 @@ import java.net.URL;
  */
 
 public class FetchURL extends AsyncTask<String, Void, String> {
-
     public static String distance;
+    public static String duration;
 
     Context mContext;
     String directionMode = "driving";
@@ -72,6 +72,7 @@ public class FetchURL extends AsyncTask<String, Void, String> {
             data = sb.toString();
             Log.d("mylog", "Downloaded URL: " + data.toString());
             distance = new JSONObject(data).getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONObject("distance").getString("text");
+            duration = new JSONObject(data).getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONObject("duration").getString("text");
             br.close();
         } catch (Exception e) {
             Log.d("mylog", "Exception downloading URL: " + e.toString());

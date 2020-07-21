@@ -11,6 +11,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         app:titleTextColor="@color/colorWhite"
+        android:theme="@style/MyActionBarTheme"
         android:elevation="4dp" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -20,21 +21,22 @@
         android:layout_below="@+id/toolbar"
         android:layout_alignTop="@id/toolbar"
         android:layout_marginTop="?attr/actionBarSize"
+        android:layout_marginBottom="?attr/actionBarSize"
         tools:context=".MainActivity">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            tools:listitem="@layout/list_item" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <FrameLayout
         android:id="@+id/ad_view_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="?attr/actionBarSize"
         android:layout_centerInParent="true"
         android:layout_alignParentBottom="true" />
-
 </RelativeLayout>
 

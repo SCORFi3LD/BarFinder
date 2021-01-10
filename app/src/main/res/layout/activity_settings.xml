@@ -8,7 +8,7 @@
     tools:context=".SettingsActivity">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp">
 
@@ -45,7 +45,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Range"
+                android:text="Search Range"
                 android:textStyle="bold" />
 
             <SeekBar
@@ -55,14 +55,16 @@
                 android:max="50"
                 android:min="1"
                 android:progress="1"
-                android:theme="@style/Widget.AppCompat.SeekBar" />
+                android:theme="@style/Widget.AppCompat.SeekBar"
+                tools:targetApi="o" />
+
             <TextView
                 android:id="@+id/txt_progress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="1km"
                 android:textAlignment="center"
                 android:textSize="12sp"
-                android:text="1km"
                 android:textStyle="bold" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -1,6 +1,15 @@
 <resources>
     <string name="app_name">Bar Finder</string>
-    <string name="license" translatable="false" formatted="true">Copyright (c) 2020 Kokila Ekanayake\nAll Rights Reserved\n\nUnauthorized copying of the source code or editing, via any medium is strictly prohibited.\n\nProprietary and confidential\n\nWritten by Kokila Ekanayake, June 2020</string>
+    <string name="app_sub_title">Locate the bar near you</string>
+
+    <!-- About Activity -->
+    <string name="license" formatted="true" translatable="false">Copyright (c) 2020 Kokila Ekanayake\nAll Rights Reserved\n\nUnauthorized copying of the source code or editing, via any medium is strictly prohibited.\n\nProprietary and confidential\n\nWritten by Kokila Ekanayake, June 2020</string>
     <string name="email" translatable="false">kokilaprabuddha@gmail.com</string>
     <string name="feedback">Your feedback is important to us in order to make TakeIt better for you. Report any bugs, improvements and suggestions to make this app better.</string>
+
+    <!-- Permission Activity -->
+    <string name="permission_request_title">Permission Request</string>
+    <string name="permission_request_text">This app needs permission to access device location to provide services. Please allow the permission</string>
+    <string name="grant_permission">Grant Permission</string>
+
 </resources>

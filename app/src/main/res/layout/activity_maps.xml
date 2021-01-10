@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/map_activity_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
@@ -15,7 +16,6 @@
 
     <ImageButton
         android:id="@+id/btn_map_back"
-        style="@style/CardView"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_marginLeft="8dp"
@@ -136,27 +136,6 @@
                                     android:layout_height="wrap_content"
                                     android:layout_centerInParent="true"
                                     android:text="WEBSITE"
-                                    android:textColor="@color/colorAccent"
-                                    android:translationY="20dp"/>
-                            </RelativeLayout>
-
-                            <RelativeLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1">
-
-                                <ImageButton
-                                    android:id="@+id/btn_map_nan"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:background="?attr/selectableItemBackgroundBorderless"
-                                    android:src="@drawable/ic_call" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_centerInParent="true"
-                                    android:text="NAN"
                                     android:textColor="@color/colorAccent"
                                     android:translationY="20dp" />
                             </RelativeLayout>

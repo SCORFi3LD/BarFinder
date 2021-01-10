@@ -1,16 +1,29 @@
 package com.scorfield.barfinder;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.LinearInterpolator;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +44,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -43,10 +58,14 @@ import com.scorfield.barfinder.utils.AnimUtils;
 
 import org.json.JSONObject;
 
+import java.util.List;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TaskLoadedCallback, View.OnClickListener {
 
+    RelativeLayout mapActivityContainer;
     private GoogleMap mMap;
     private Polyline currentPolyline;
+    private GroundOverlay groundOverlay;
     LatLng myLatLng, storeLatLng;
     String placeId;
 
@@ -56,10 +75,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     TextView storeName, address, closed, rating;
 
+    BroadcastReceiver br;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        mapActivityContainer = findViewById(R.id.map_activity_container);
+
+
         animUtils = new AnimUtils();
 
         storeName = findViewById(R.id.nameToolbar);
@@ -81,6 +105,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         storeLatLng = (LatLng) in.getExtras().get("store");
         placeId = in.getExtras().getString("placeId");
 
+        br = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                double lat = intent.getExtras().getDouble("lat");
+                double lng = intent.getExtras().getDouble("lng");
+                myLatLng = new LatLng(lat, lng);
+                addOverlay(myLatLng);
+            }
+        };
+        startLocationService();
         getPlaceDetails(placeId);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -122,7 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 Intent callIntent = new Intent(Intent.ACTION_CALL);
                                 callIntent.setData(Uri.parse("tel:" + number));//change the number
                                 startActivity(callIntent);
-                            }else{
+                            } else {
                                 Toast.makeText(MapsActivity.this, "Telephone number not registered!", Toast.LENGTH_LONG).show();
                             }
                         }
@@ -163,25 +197,81 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setMyLocationEnabled(false);
+        mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setRotateGesturesEnabled(false);
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.maps_theme));
 
-        MarkerOptions options = new MarkerOptions()
-                .position(myLatLng)
-                .title("Your Location")
-                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_me));
-        mMap.addMarker(options);
-
-        MarkerOptions store = new MarkerOptions()
-                .position(storeLatLng)
-                .title("Liquor Store")
-                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_store));
-        mMap.addMarker(store);
-
         String url = getDirectionsUrl(myLatLng, storeLatLng, "driving");
         new FetchURL(MapsActivity.this).execute(url, "walking");
+    }
+
+
+    public void addOverlay(LatLng place) {
+        if (groundOverlay != null) {
+            groundOverlay.remove();
+        }
+        groundOverlay = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .position(place, 200)
+                .transparency(0.8f)
+                .zIndex(3)
+                .image(BitmapDescriptorFactory.fromBitmap(drawableToBitmap(getDrawable(R.drawable.map_overlay)))));
+
+        startOverlayAnimation(groundOverlay);
+    }
+
+    private void startOverlayAnimation(final GroundOverlay groundOverlay) {
+        AnimatorSet animatorSet = new AnimatorSet();
+
+        ValueAnimator vAnimator = ValueAnimator.ofInt(0, 100);
+        vAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        vAnimator.setRepeatMode(ValueAnimator.RESTART);
+        vAnimator.setInterpolator(new LinearInterpolator());
+        vAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                final Integer val = (Integer) valueAnimator.getAnimatedValue();
+                groundOverlay.setDimensions(val);
+            }
+        });
+
+        ValueAnimator tAnimator = ValueAnimator.ofFloat(0, 1);
+        tAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        tAnimator.setRepeatMode(ValueAnimator.RESTART);
+        tAnimator.setInterpolator(new LinearInterpolator());
+        tAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                Float val = (Float) valueAnimator.getAnimatedValue();
+                groundOverlay.setTransparency(val);
+            }
+        });
+
+        animatorSet.setDuration(3000);
+        animatorSet.playTogether(vAnimator, tAnimator);
+        animatorSet.start();
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = null;
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if (bitmapDrawable.getBitmap() != null) {
+                return bitmapDrawable.getBitmap();
+            }
+        }
+
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+        } else {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 
     private String getDirectionsUrl(LatLng origin, LatLng dest, String directionMode) {
@@ -223,7 +313,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             currentPolyline.remove();
         }
         currentPolyline = mMap.addPolyline((PolylineOptions) values[0]);
+        List<LatLng> points = currentPolyline.getPoints();
+        MarkerOptions options = new MarkerOptions()
+                .position(points.get(0))
+                .title("Your Location")
+                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_me));
+        mMap.addMarker(options);
+
+        MarkerOptions store = new MarkerOptions()
+                .position(points.get(points.size() - 1))
+                .title("Liquor Store")
+                .icon(generateBitmapDescriptorFromRes(this, R.drawable.ic_marker_store));
+        mMap.addMarker(store);
         zoomToPolyline(mMap, currentPolyline);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter("FILTER");
+        this.registerReceiver(br, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(br);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopLocationService();
+        super.onDestroy();
     }
 
     private BitmapDescriptor generateBitmapDescriptorFromRes(Context context, int resId) {
@@ -254,6 +375,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 btnExpand.setImageResource(R.drawable.ic_arrow_up);
                 animUtils.collapse(cardView);
             }
+        }
+    }
+
+    /**
+     * check location is running
+     *
+     * @return boolean
+     */
+    private boolean isLocationServiceRunning() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager != null) {
+            for (ActivityManager.RunningServiceInfo serviceInfo : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+                if (LocationService.class.getName().equals(serviceInfo.service.getClassName())) {
+                    if (serviceInfo.foreground) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    /**
+     * Start location service for get the latlng
+     */
+    private void startLocationService() {
+        if (!isLocationServiceRunning()) {
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
+            intent.setAction(GoogleServiceConstants.ACTION_START_LOCATION_SERVICE);
+            startService(intent);
+        }
+    }
+
+    /**
+     * Stop location service for get the latlng
+     */
+    private void stopLocationService() {
+        if (isLocationServiceRunning()) {
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
+            intent.setAction(GoogleServiceConstants.ACTION_STOP_LOCATION_SERVICE);
+            stopService(intent);
         }
     }
 }

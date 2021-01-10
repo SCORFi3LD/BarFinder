@@ -12,11 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/colorPrimary"
-        android:text="Grant Permission"
+        android:background="@drawable/grant_permission_button"
+        android:text="@string/grant_permission"
         android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        tools:ignore="HardcodedText" />
+        android:textColor="#FFFFFF"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,19 +33,15 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:fontFamily="sans-serif-condensed"
-            android:text="Permission Request"
+            android:text="@string/permission_request_title"
             android:textSize="24sp"
-            android:textStyle="bold"
-            tools:ignore="HardcodedText" />
+            android:textStyle="bold"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
             android:gravity="center_horizontal"
-            android:text="This app needs permission to access device location to provide services. Please allow the permission "
-            tools:ignore="HardcodedText" />
+            android:text="@string/permission_request_text"/>
     </LinearLayout>
-
-
 </RelativeLayout>
